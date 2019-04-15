@@ -5,6 +5,8 @@
  */
 package cn.orz.pascal.mybank;
 
+import java.util.List;
+import java.util.UUID;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -17,6 +19,7 @@ import javax.transaction.Transactional;
  */
 @ApplicationScoped
 public class AccountService {
+
     @Inject
     EntityManager em;
 
@@ -25,5 +28,34 @@ public class AccountService {
         Account account = new Account();
         account.setAmount(amount);
         em.persist(account);
+    }
+
+    @Transactional
+    public List<Account> findAll() {
+        return em.createQuery("SELECT a FROM Account a", Account.class)
+                .setMaxResults(3)
+                .getResultList();
+    }
+
+    @Transactional
+    public Account deposit(UUID id, long amount) {
+        em.createQuery("UPDATE Account SET amount = amount + :amount WHERE id=:id")
+                .setParameter("id", id)
+                .setParameter("amount", amount)
+                .executeUpdate();
+        return em.createQuery("SELECT a FROM Account a WHERE id=:id", Account.class)
+                .setParameter("id", id)
+                .getSingleResult();
+    }
+
+    @Transactional
+    public Account withdraw(UUID id, long amount) {
+        em.createQuery("UPDATE Account SET amount = amount - :amount WHERE id=:id")
+                .setParameter("id", id)
+                .setParameter("amount", amount)
+                .executeUpdate();
+        return em.createQuery("SELECT a FROM Account a WHERE id=:id", Account.class)
+                .setParameter("id", id)
+                .getSingleResult();
     }
 }
